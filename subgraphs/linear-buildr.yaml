@@ -1,0 +1,78 @@
+specVersion: 0.0.2
+description: Linear API
+repository: https://github.com/LiquefyLtd/linear-subgraph
+schema:
+  file: ./linear-buildr.graphql
+dataSources:
+  # for lina Proxy
+  - kind: ethereum/contract
+    name: Linear_Proxy
+    network: ropsten
+    source:
+      address: '0x908B56f016233E84c391eebe52Ee4d461fD8fb87'
+      abi: LnProxyERC20
+      startBlock: 8707999 # creation of this proxy
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ../src/mapping.ts
+      entities:
+        - Transfer
+      abis:
+        - name: LnProxyERC20
+          file: ../abis/LnProxyERC20.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransferLINA
+
+  - kind: ethereum/contract
+    name: lUSD_LnAsset
+    network: ropsten
+    source:
+      address: '0x04Bf20165174Ebd282c735E88124A5CC716C3eb2'
+      abi: LnAsset
+      startBlock: 8868563
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ../src/mapping.ts
+      entities:
+        - Transfer
+        - Minted
+        - Burned
+      abis:
+        - name: LnAsset
+          file: ../abis/LnAsset.json
+      eventHandlers:
+        - event: Transfer(indexed address,indexed address,uint256)
+          handler: handleTransferAsset
+
+  # Handle FeePool FeesClaimed
+  - kind: ethereum/contract
+    name: FeePool
+    network: ropsten
+    source:
+      address: '0xb440DD674e1243644791a4AdfE3A2AbB0A92d309' # ProxyFeePool
+      abi: FeePool
+      startBlock: 7680399
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ../src/mapping.ts
+      entities:
+        - FeesClaimed
+      abis:
+        - name: FeePool
+          file: ../abis/FeePool.json
+        - name: FeePoolv217
+          file: ../abis/FeePool_v2.17.json
+        - name: Linear4
+          file: ../abis/Linear_bytes4.json
+        - name: Linear32
+          file: ../abis/Linear_bytes32.json
+      eventHandlers:
+        - event: FeesClaimed(address,uint256,uint256)
+          handler: handleFeesClaimed

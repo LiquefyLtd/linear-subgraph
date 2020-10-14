@@ -1,0 +1,62 @@
+
+type Transfer @entity {
+  id: ID!
+  from: Bytes! # address
+  to: Bytes! # address
+  value: BigInt! # uint256
+  timestamp: BigInt!
+  block: BigInt!
+  source: String!
+}
+
+type Minted @entity {
+  id: ID!
+  account: Bytes! # address
+  value: BigInt!
+  source: String!
+  timestamp: BigInt!
+  gasPrice: BigInt!
+  block: BigInt!
+}
+
+type Builder @entity {
+  id: ID!
+}
+
+type DebtSnapshot @entity {
+  id: ID!
+  # last block where an event happened
+  block: BigInt!
+  timestamp: BigInt!
+  account: Bytes! # address
+  balanceOf: BigInt # early on it was possible this wouldn't have a value (pre v2)
+  # the following will be null before multicurrency (v2) release
+  collateral: BigInt
+  debtBalanceOf: BigInt
+}
+
+type AssetHolder @entity {
+  id: ID! # address of the holder + the asset
+  asset: String! # the asset's currencyKey
+  balanceOf: BigInt!
+}
+
+type Burned @entity {
+  id: ID!
+  account: Bytes! # address
+  value: BigInt! # uint256
+  source: String!
+  timestamp: BigInt!
+  gasPrice: BigInt!
+  block: BigInt!
+}
+
+type FeesClaimed @entity {
+  id: ID!
+  account: Bytes! # address
+  value: BigInt! # uint256
+  rewards: BigInt! # uint256
+  block: BigInt!
+  timestamp: BigInt!
+}
+
