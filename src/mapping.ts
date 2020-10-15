@@ -1,4 +1,4 @@
-import { Transfer as TransferEvent } from '../generated/Linear_Proxy/LnProxyERC20';
+import { Transfer as TransferEvent, LnProxyERC20 } from '../generated/Linear_Proxy/LnProxyERC20';
 import { FeesClaimed as FeesClaimedEvent } from '../generated/LnFeeSystem/LnFeeSystem';
 import { LnAsset } from '../generated/LnAsset_lUSD/LnAsset';
 import { CollateralLog as CollateralEvent, RedeemCollateral as RedeemCollateralEvent } 
@@ -34,9 +34,11 @@ export function handleTransferLINA(event: TransferEvent): void {
 
 // add build/burn event in LnBuildBurnSystem?
 export function handleTransferAsset(event: TransferEvent): void {
-  let synth = LnAsset.bind(event.address);
-  let keyname = 'sUSD';
-  let trykeyname = synth.try_keyName();
+  let proxyErc20 = LnProxyERC20.bind(event.address);
+  let targetLnAsset = proxyErc20.target();
+  let asset = LnAsset.bind(targetLnAsset);
+  let keyname = 'lUSD';
+  let trykeyname = asset.try_keyName();
   if (!trykeyname.reverted) {
     keyname = trykeyname.value.toString();
   }

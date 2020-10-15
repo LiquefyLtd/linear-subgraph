@@ -30,8 +30,8 @@ dataSources:
     name: LnAsset_lUSD
     network: ropsten
     source:
-      address: '0x04Bf20165174Ebd282c735E88124A5CC716C3eb2'
-      abi: LnAsset
+      address: '0xEA53e2cfC9f8cd022f68e15C6bAB9466bd1EF4A5' # LnProxyERC20_lUSD
+      abi: LnProxyERC20
       startBlock: 8868563
     mapping:
       kind: ethereum/events
@@ -45,6 +45,8 @@ dataSources:
       abis:
         - name: LnAsset
           file: ../abis/LnAsset.json
+        - name: LnProxyERC20
+          file: ../abis/LnProxyERC20.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransferAsset
