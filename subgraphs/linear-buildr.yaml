@@ -53,9 +53,9 @@ dataSources:
     name: LnFeeSystem
     network: ropsten
     source:
-      address: '0xCC7CDcF45A9cC941983470Bb841ECC32cf5eB4AB'
+      address: '0x8657f180611Ba12F9D2620FC9066aD1E866e0460'
       abi: LnFeeSystem
-      startBlock: 7680399
+      startBlock: 8879615
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.4
@@ -69,3 +69,27 @@ dataSources:
       eventHandlers:
         - event: FeesClaimed(address,uint256,uint256)
           handler: handleFeesClaimed
+
+  - kind: ethereum/contract
+    name: LnCollateralSystem
+    network: ropsten
+    source:
+      address: '0x3e6cE54259886720F41e6d25973570835e3eef20'
+      abi: LnCollateralSystem
+      startBlock: 8868520
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.4
+      language: wasm/assemblyscript
+      file: ../src/mapping.ts
+      entities:
+        - Collateral
+        - RedeemCollateral
+      abis:
+        - name: LnCollateralSystem
+          file: ../abis/LnCollateralSystem.json
+      eventHandlers:
+        - event: CollateralLog(address,bytes32,uint256,uint256)
+          handler: handleCollateralLog
+        - event: RedeemCollateral(address,bytes32,uint256,uint256)
+          handler: handleRedeemCollateral

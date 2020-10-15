@@ -19,10 +19,6 @@ type Minted @entity {
   block: BigInt!
 }
 
-type Builder @entity {
-  id: ID!
-}
-
 type DebtSnapshot @entity {
   id: ID!
   # last block where an event happened
@@ -33,12 +29,6 @@ type DebtSnapshot @entity {
   # the following will be null before multicurrency (v2) release
   collateral: BigInt
   debtBalanceOf: BigInt
-}
-
-type AssetHolder @entity {
-  id: ID! # address of the holder + the asset
-  asset: String! # the asset's currencyKey
-  balanceOf: BigInt!
 }
 
 type Burned @entity {
@@ -54,9 +44,28 @@ type Burned @entity {
 type FeesClaimed @entity {
   id: ID!
   account: Bytes! # address
-  value: BigInt! # uint256
-  rewards: BigInt! # uint256
+  rewardslusd: BigInt! # uint256
+  rewardsLina: BigInt! # uint256
   block: BigInt!
   timestamp: BigInt!
 }
 
+type Collateral @entity {
+  id: ID!
+  account: Bytes! # address
+  currency: String!
+  value: BigInt!
+  timestamp: BigInt!
+  gasPrice: BigInt!
+  block: BigInt!
+}
+
+type RedeemCollateral @entity {
+  id: ID!
+  account: Bytes! # address
+  currency: String!
+  value: BigInt!
+  timestamp: BigInt!
+  gasPrice: BigInt!
+  block: BigInt!
+}

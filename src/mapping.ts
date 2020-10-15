@@ -1,20 +1,24 @@
 import { Transfer as TransferEvent } from '../generated/Linear_Proxy/LnProxyERC20';
 import { FeesClaimed as FeesClaimedEvent } from '../generated/LnFeeSystem/LnFeeSystem';
-//LnAsset
+import { LnAsset } from '../generated/LnAsset_lUSD/LnAsset';
+import { CollateralLog as CollateralEvent, RedeemCollateral as RedeemCollateralEvent } 
+  from '../generated.LnCollateralSystem/LnCollateralSystem';
 
 import {
   Transfer,
   Minted,
-  Builder,
   DebtSnapshot,
-  AssetHolder,
   Burned,
   FeesClaimed,
+  Collateral,
+  RedeemCollateral,
 } from '../generated/schema';
 
 import { store, BigInt, Address, ethereum, Bytes } from '@graphprotocol/graph-ts';
 import { strToBytes } from './common';
 import { log } from '@graphprotocol/graph-ts';
+
+const AddressZero = Address.fromString("0x0");
 
 export function handleTransferLINA(event: TransferEvent): void {
   let entity = new Transfer(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
@@ -26,12 +30,10 @@ export function handleTransferLINA(event: TransferEvent): void {
   entity.block = event.block.number;
   entity.save();
 
-  //trackLINAHolder(event.address, event.params.from, event.block, event.transaction);
-  //trackLINAHolder(event.address, event.params.to, event.block, event.transaction);
 }
 
+// add build/burn event in LnBuildBurnSystem?
 export function handleTransferAsset(event: TransferEvent): void {
-  //let contract = LnAsset.bind(event.address);
   let entity = new Transfer(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
   entity.source = 'lUSD';
   entity.from = event.params.from;
@@ -41,26 +43,80 @@ export function handleTransferAsset(event: TransferEvent): void {
   entity.block = event.block.number;
   entity.save();
 
+  if (event.params.from == AddressZero) {// mint
+    let mintEn = new Minted(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
+    mintEn.account = event.transaction.from;
+    mintEn.value = event.params.value;
+
+    let synth = LnAsset.bind(event.address);
+    let keyname = synth.try_keyName();
+    if (!keyname.reverted) {
+      mintEn.source = keyname.value.toString();
+    } else {
+      mintEn.source = 'sUSD';
+    }
+
+    mintEn.timestamp = event.block.timestamp;
+    mintEn.block = event.block.number;
+    mintEn.gasPrice = event.transaction.gasPrice;
+    mintEn.save();
+  }
+  if (event.params.to == AddressZero) {// burn
+    let burnEn = new Burned(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
+    burnEn.account = event.transaction.from;
+    burnEn.value = event.params.value;
+
+    let synth = LnAsset.bind(event.address);
+    let keyname = synth.try_keyName();
+    if (!keyname.reverted) {
+      burnEn.source = keyname.value.toString();
+    } else {
+      burnEn.source = 'sUSD';
+    }
+
+    burnEn.timestamp = event.block.timestamp;
+    burnEn.block = event.block.number;
+    burnEn.gasPrice = event.transaction.gasPrice;
+    burnEn.save();
+  }
 }
 
 export function handleFeesClaimed(event: FeesClaimedEvent): void {
   let entity = new FeesClaimed(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
 
-  entity.account = event.params.account;
-  entity.rewards = event.params.LINARewards;
-  entity.value = event.params.lUSDAmount;
+  entity.account = event.params.user;
+  entity.rewardsLina = event.params.linaRewards;
+  entity.rewardslusd = event.params.lUSDAmount;
   entity.block = event.block.number;
   entity.timestamp = event.block.timestamp;
 
   entity.save();
+}
 
-/*
-  let LINAHolder = LINAHolder.load(entity.account.toHexString());
-  if (LINAHolder != null) {
-    if (LINAHolder.claims == null) {
-      LINAHolder.claims = BigInt.fromI32(0);
-    }
-    LINAHolder.claims = LINAHolder.claims.plus(BigInt.fromI32(1));
-    LINAHolder.save();
-  }*/
+export function handleCollateralLog(event: CollateralEvent): void {
+  let entity = new Collateral(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
+
+  entity.account = event.params.user;
+  entity.currency = event.params._currency;
+  entity.value = event.params._amount;
+
+  entity.timestamp = event.block.timestamp;
+  entity.block = event.block.number;
+  entity.gasPrice = event.transaction.gasPrice;
+
+  entity.save();
+}
+
+export function handleRedeemCollateral(event: RedeemCollateralEvent): void {
+  let entity = new RedeemCollateral(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
+
+  entity.account = event.params.user;
+  entity.currency = event.params._currency;
+  entity.value = event.params._amount;
+
+  entity.timestamp = event.block.timestamp;
+  entity.block = event.block.number;
+  entity.gasPrice = event.transaction.gasPrice;
+  
+  entity.save();
 }
