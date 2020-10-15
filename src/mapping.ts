@@ -20,7 +20,13 @@ import { log } from '@graphprotocol/graph-ts';
 
 let AddressZero = Address.fromString("0x0000000000000000000000000000000000000000");
 
+let LnCollateralSystemAddress = Address.fromString("0x3e6cE54259886720F41e6d25973570835e3eef20");
+
 export function handleTransferLINA(event: TransferEvent): void {
+  if (event.params.from == LnCollateralSystemAddress || event.params.to == LnCollateralSystemAddress) {//if duplicate with Collateral / RedeemCollateral
+    return;
+  }
+
   let entity = new Transfer(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
   entity.source = 'LINA';
   entity.from = event.params.from;
@@ -43,15 +49,7 @@ export function handleTransferAsset(event: TransferEvent): void {
     keyname = trykeyname.value.toString();
   }
 
-  let entity = new Transfer(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
-  entity.source = keyname;
-  entity.from = event.params.from;
-  entity.to = event.params.to;
-  entity.value = event.params.value;
-  entity.timestamp = event.block.timestamp;
-  entity.block = event.block.number;
-  entity.save();
-
+  let isMintOrBurn = false;
   if (event.params.from == AddressZero) {// mint
     let mintEn = new Minted(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
     mintEn.account = event.transaction.from;
@@ -62,6 +60,7 @@ export function handleTransferAsset(event: TransferEvent): void {
     mintEn.block = event.block.number;
     mintEn.gasPrice = event.transaction.gasPrice;
     mintEn.save();
+    isMintOrBurn = true;
   }
   if (event.params.to == AddressZero) {// burn
     let burnEn = new Burned(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
@@ -73,6 +72,18 @@ export function handleTransferAsset(event: TransferEvent): void {
     burnEn.block = event.block.number;
     burnEn.gasPrice = event.transaction.gasPrice;
     burnEn.save();
+    isMintOrBurn = true;
+  }
+
+  if (!isMintOrBurn) {
+    let entity = new Transfer(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
+    entity.source = keyname;
+    entity.from = event.params.from;
+    entity.to = event.params.to;
+    entity.value = event.params.value;
+    entity.timestamp = event.block.timestamp;
+    entity.block = event.block.number;
+    entity.save();
   }
 }
 
