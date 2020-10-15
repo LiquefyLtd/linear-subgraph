@@ -27,7 +27,7 @@ dataSources:
           handler: handleTransferLINA
 
   - kind: ethereum/contract
-    name: lUSD_LnAsset
+    name: LnAsset_lUSD
     network: ropsten
     source:
       address: '0x04Bf20165174Ebd282c735E88124A5CC716C3eb2'
@@ -49,13 +49,12 @@ dataSources:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransferAsset
 
-  # Handle FeePool FeesClaimed
   - kind: ethereum/contract
-    name: FeePool
+    name: LnFeeSystem
     network: ropsten
     source:
-      address: '0xb440DD674e1243644791a4AdfE3A2AbB0A92d309' # ProxyFeePool
-      abi: FeePool
+      address: '0xCC7CDcF45A9cC941983470Bb841ECC32cf5eB4AB'
+      abi: LnFeeSystem
       startBlock: 7680399
     mapping:
       kind: ethereum/events
@@ -65,14 +64,8 @@ dataSources:
       entities:
         - FeesClaimed
       abis:
-        - name: FeePool
-          file: ../abis/FeePool.json
-        - name: FeePoolv217
-          file: ../abis/FeePool_v2.17.json
-        - name: Linear4
-          file: ../abis/Linear_bytes4.json
-        - name: Linear32
-          file: ../abis/Linear_bytes32.json
+        - name: LnFeeSystem
+          file: ../abis/LnFeeSystem.json
       eventHandlers:
         - event: FeesClaimed(address,uint256,uint256)
           handler: handleFeesClaimed
