@@ -2,7 +2,7 @@ import { Transfer as TransferEvent } from '../generated/Linear_Proxy/LnProxyERC2
 import { FeesClaimed as FeesClaimedEvent } from '../generated/LnFeeSystem/LnFeeSystem';
 import { LnAsset } from '../generated/LnAsset_lUSD/LnAsset';
 import { CollateralLog as CollateralEvent, RedeemCollateral as RedeemCollateralEvent } 
-  from '../generated.LnCollateralSystem/LnCollateralSystem';
+  from '../generated/LnCollateralSystem/LnCollateralSystem';
 
 import {
   Transfer,
@@ -34,8 +34,15 @@ export function handleTransferLINA(event: TransferEvent): void {
 
 // add build/burn event in LnBuildBurnSystem?
 export function handleTransferAsset(event: TransferEvent): void {
+  let synth = LnAsset.bind(event.address);
+  let keyname = 'sUSD';
+  let trykeyname = synth.try_keyName();
+  if (!trykeyname.reverted) {
+    keyname = trykeyname.value.toString();
+  }
+
   let entity = new Transfer(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
-  entity.source = 'lUSD';
+  entity.source = keyname;
   entity.from = event.params.from;
   entity.to = event.params.to;
   entity.value = event.params.value;
@@ -47,14 +54,7 @@ export function handleTransferAsset(event: TransferEvent): void {
     let mintEn = new Minted(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
     mintEn.account = event.transaction.from;
     mintEn.value = event.params.value;
-
-    let synth = LnAsset.bind(event.address);
-    let keyname = synth.try_keyName();
-    if (!keyname.reverted) {
-      mintEn.source = keyname.value.toString();
-    } else {
-      mintEn.source = 'sUSD';
-    }
+    mintEn.source = keyname;
 
     mintEn.timestamp = event.block.timestamp;
     mintEn.block = event.block.number;
@@ -65,14 +65,7 @@ export function handleTransferAsset(event: TransferEvent): void {
     let burnEn = new Burned(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
     burnEn.account = event.transaction.from;
     burnEn.value = event.params.value;
-
-    let synth = LnAsset.bind(event.address);
-    let keyname = synth.try_keyName();
-    if (!keyname.reverted) {
-      burnEn.source = keyname.value.toString();
-    } else {
-      burnEn.source = 'sUSD';
-    }
+    burnEn.source = keyname;
 
     burnEn.timestamp = event.block.timestamp;
     burnEn.block = event.block.number;
@@ -97,7 +90,7 @@ export function handleCollateralLog(event: CollateralEvent): void {
   let entity = new Collateral(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
 
   entity.account = event.params.user;
-  entity.currency = event.params._currency;
+  entity.currency = event.params._currency.toString();
   entity.value = event.params._amount;
 
   entity.timestamp = event.block.timestamp;
@@ -111,12 +104,12 @@ export function handleRedeemCollateral(event: RedeemCollateralEvent): void {
   let entity = new RedeemCollateral(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
 
   entity.account = event.params.user;
-  entity.currency = event.params._currency;
+  entity.currency = event.params._currency.toString();
   entity.value = event.params._amount;
 
   entity.timestamp = event.block.timestamp;
   entity.block = event.block.number;
   entity.gasPrice = event.transaction.gasPrice;
-  
+
   entity.save();
 }
