@@ -18,7 +18,7 @@ import { store, BigInt, Address, ethereum, Bytes } from '@graphprotocol/graph-ts
 import { strToBytes } from './common';
 import { log } from '@graphprotocol/graph-ts';
 
-const AddressZero = Address.fromString("0x0");
+let AddressZero = Address.fromString("0x0000000000000000000000000000000000000000");
 
 export function handleTransferLINA(event: TransferEvent): void {
   let entity = new Transfer(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
