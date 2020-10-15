@@ -1,5 +1,5 @@
-import { Transfer as TransferEvent } from '../generated/LnProxyERC20';
-import { FeesClaimed as FeesClaimedEvent } from '../generated/FeePool/FeePool';
+import { Transfer as TransferEvent } from '../generated/Linear_Proxy/LnProxyERC20';
+import { FeesClaimed as FeesClaimedEvent } from '../generated/LnFeeSystem/LnFeeSystem';
 //LnAsset
 
 import {
