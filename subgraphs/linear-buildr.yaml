@@ -42,11 +42,18 @@ dataSources:
         - Transfer
         - Minted
         - Burned
+        - DebtSnapshot
       abis:
         - name: LnAsset
           file: ../abis/LnAsset.json
         - name: LnProxyERC20
           file: ../abis/LnProxyERC20.json
+        - name: LnDebtSystem
+          file: ../abis/LnDebtSystem.json
+        - name: LnCollateralSystem
+          file: ../abis/LnCollateralSystem.json
+        - name: LnRewardLocker
+          file: ../abis/LnRewardLocker.json
       eventHandlers:
         - event: Transfer(indexed address,indexed address,uint256)
           handler: handleTransferAsset

@@ -1,8 +1,10 @@
 import { Transfer as TransferEvent, LnProxyERC20 } from '../generated/Linear_Proxy/LnProxyERC20';
 import { FeesClaimed as FeesClaimedEvent } from '../generated/LnFeeSystem/LnFeeSystem';
 import { LnAsset } from '../generated/LnAsset_lUSD/LnAsset';
-import { CollateralLog as CollateralEvent, RedeemCollateral as RedeemCollateralEvent } 
+import { CollateralLog as CollateralEvent, RedeemCollateral as RedeemCollateralEvent, LnCollateralSystem } 
   from '../generated/LnCollateralSystem/LnCollateralSystem';
+import { LnDebtSystem } from "../generated/LnAsset_lUSD/LnDebtSystem";
+import { LnRewardLocker } from "../generated/LnAsset_lUSD/LnRewardLocker";
 
 import {
   Transfer,
@@ -20,7 +22,11 @@ import { log } from '@graphprotocol/graph-ts';
 
 let AddressZero = Address.fromString("0x0000000000000000000000000000000000000000");
 
+// ropsten contract address, TODO: write some tool to make this availiable with mainnet
+let linaProxyAddress = Address.fromString("0x908B56f016233E84c391eebe52Ee4d461fD8fb87");
 let LnCollateralSystemAddress = Address.fromString("0x3e6cE54259886720F41e6d25973570835e3eef20");
+let LnDebtSystemAddress = Address.fromString("0xc17650b3ECC76ba6cc8236C41Ed1b6A48Ea3cff5");
+let LnRewardLockerAddress = Address.fromString("0x71192594A101Bf69672E41B49cfeBd7aA3E3042B");
 
 export function handleTransferLINA(event: TransferEvent): void {
   if (event.params.from == LnCollateralSystemAddress || event.params.to == LnCollateralSystemAddress) {//if duplicate with Collateral / RedeemCollateral
@@ -84,7 +90,31 @@ export function handleTransferAsset(event: TransferEvent): void {
     entity.timestamp = event.block.timestamp;
     entity.block = event.block.number;
     entity.save();
+  } else {
+    trackDebtSnapshot(event);
   }
+}
+
+function trackDebtSnapshot(event: ethereum.Event): void {
+  let collateralSystem = LnCollateralSystem.bind(LnCollateralSystemAddress);
+  let debtSsytem = LnDebtSystem.bind(LnDebtSystemAddress);
+  let lina = LnProxyERC20.bind(linaProxyAddress);
+  let rewardLocker = LnRewardLocker.bind(LnRewardLockerAddress);
+  let account = event.transaction.from
+
+  let entity = new DebtSnapshot(event.transaction.hash.toHex() + '-' + event.logIndex.toString());
+  entity.block = event.block.number;
+  entity.timestamp = event.block.timestamp;
+  entity.account = account;
+  
+  // is balanceOf in use? maybe can remove
+  let collateralLina = collateralSystem.GetUserCollateral(account, strToBytes("LINA"));
+  let lockLina = rewardLocker.balanceOf(account);
+  entity.balanceOf = lina.balanceOf(account).plus(collateralLina).plus(lockLina);
+
+  entity.collateral = collateralSystem.GetUserTotalCollateralInUsd(account);
+  entity.debtBalanceOf = debtSsytem.GetUserDebtBalanceInUsd(account).value0;
+  entity.save();
 }
 
 export function handleFeesClaimed(event: FeesClaimedEvent): void {
